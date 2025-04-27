@@ -6,104 +6,165 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
 class RavenMatrixGenerator:
-    def __init__(self, type_num=None, difficulty=3, cell_size=120, grid_size=3):
+    def __init__(self, type_num=None, difficulty=3, cell_size=150, grid_size=3):
         self.type_num = type_num
         self.difficulty = difficulty
         self.cell_size = cell_size
         self.grid_size = grid_size
         self.margin = 10
-        self.W = cell_size*grid_size + self.margin*(grid_size+1)
-        self.H = cell_size*grid_size + self.margin*(grid_size+1) + cell_size + 3*self.margin
+        self.W = cell_size * grid_size + self.margin * (grid_size + 1)
+        self.H = cell_size * grid_size + self.margin * (grid_size + 1) + cell_size + 3 * self.margin
         
-        # 유형 분류 및 이름
+        # 모든 문제 유형 정의 (1~23)
         self.type_names = {
             1: "위치 패턴 (Position Pattern)",
             2: "채움 패턴 (Fill Pattern)",
-            3: "기하 변환 (Geometric Transformation)",
-            4: "요소 진행 (Element Progression)",
-            5: "영역 패턴 (Region Pattern)",
-            6: "점 패턴 (Point Pattern)",
-            7: "심볼 배치 (Symbol Arrangement)",
-            8: "상태 변환 (State Transformation)",
-            9: "로켓/우산 패턴 (Rocket/Umbrella Pattern)",
-            10: "선분 결합 패턴 (Line Combination Pattern)",
-            11: "회전 삭제 패턴 (Rotation Subtraction Pattern)"
+            3: "코너 패턴 (Corner Pattern)",
+            # ... (23번까지 유형 추가)
+            22: "선분 결합 패턴 (Line Combination)",
+            23: "로켓 패턴 (Rocket Pattern)"
         }
         
-        # 유형별 문제 생성기 함수 매핑
+        # 유형별 생성 함수 매핑
         self.type_generators = {
-            1: [self.generate_position_pattern],
-            2: [self.generate_fill_pattern, self.generate_state_cycle],
-            3: [self.generate_corner_pattern, self.generate_shape_combination],
-            4: [self.generate_line_rotation, self.generate_grid_pattern],
-            5: [self.generate_dual_region, self.generate_diamond_pattern],
-            6: [self.generate_vertex_movement],
-            7: [self.generate_quadrant_symbol, self.generate_line_dot_pattern],
-            8: [self.generate_shape_state, self.generate_umbrella_pattern],
-            9: [self.generate_rocket_pattern],  # 문제 #23
-            10: [self.generate_star_line_pattern],  # 문제 #22
-            11: [self.generate_rotation_subtraction_pattern]  # 문제 #24
+            1: self.generate_position_pattern,
+            2: self.generate_fill_pattern,
+            # ... (23번까지 매핑)
+            22: self.generate_line_combination,
+            23: self.generate_rocket_pattern
         }
 
-    def generate_problem(self):
-        """요청한 유형에서 무작위로 패턴 선택하여 문제 생성"""
-        if self.type_num is None:
-            self.type_num = random.choice(list(self.type_generators.keys()))
-        if self.type_num not in self.type_generators:
-            raise ValueError(f"지원되지 않는 문제 유형: {self.type_num}")
-        
-        # 해당 유형에서 무작위로 생성 함수 선택
-        generator = random.choice(self.type_generators[self.type_num])
-        return generator()
+    def generate_problem(self, type_num=None):
+        """지정된 유형의 문제 생성"""
+        if type_num is None:
+            type_num = random.choice(list(self.type_generators.keys()))
+        return self.type_generators[type_num]()
 
-    # 예시 문제 생성 함수 (문제 #22: 선분 결합 패턴)
-    def generate_star_line_pattern(self):
+    # --------------------------
+    # 문제 1: 위치 패턴 (예시)
+    # --------------------------
+    def generate_position_pattern(self):
+        img = Image.new('RGB', (self.W, self.H), 'white')
+        draw = ImageDraw.Draw(img)
+        # 패턴 구현...
+        return img, 'A'
+
+    # --------------------------
+    # 문제 22: 선분 결합 패턴
+    # --------------------------
+    def generate_line_combination(self):
         img = Image.new('RGB', (self.W, self.H), 'white')
         draw = ImageDraw.Draw(img)
         
+        # 패턴 데이터
         patterns = [
             [[(0.2, 0.2, 0.8, 0.8)], [(0.2, 0.2, 0.8, 0.2)], [(0.8, 0.2, 0.8, 0.8)]],
             [[(0.2, 0.8, 0.8, 0.2)], [(0.2, 0.8, 0.8, 0.8)], [(0.2, 0.2, 0.2, 0.8)]],
             [[(0.2, 0.8, 0.8, 0.2)], [(0.2, 0.2, 0.8, 0.8)], None]
         ]
         
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                x = self.margin + j*(self.cell_size + self.margin)
-                y = self.margin + i*(self.cell_size + self.margin)
-                
-                if patterns[i][j] is None:
-                    draw.rectangle((x, y, x+self.cell_size, y+self.cell_size), outline='black', width=1)
-                    draw.text((x+self.cell_size//2-5, y+self.cell_size//2-10), '?', fill='black')
+        # 3x3 매트릭스 그리기
+        for i in range(3):
+            for j in range(3):
+                x = self.margin + j * (self.cell_size + self.margin)
+                y = self.margin + i * (self.cell_size + self.margin)
+                if i == 2 and j == 2:
+                    draw.rectangle((x, y, x+self.cell_size, y+self.cell_size), outline='black')
+                    draw.text((x+self.cell_size//2-10, y+self.cell_size//2-10), '?', fill='black')
                 else:
-                    self._draw_lines_pattern(draw, (x, y), patterns[i][j])
+                    self._draw_lines(draw, (x, y), patterns[i][j])
         
+        # 옵션 생성
         options = [
-            [[(0.2, 0.8, 0.8, 0.2), (0.2, 0.2, 0.8, 0.8)]],  # A
+            [[(0.2, 0.8, 0.8, 0.2), (0.2, 0.2, 0.8, 0.8)]],  # 정답: A
             [[(0.2, 0.2, 0.8, 0.8)]],  # B
             [[(0.2, 0.2, 0.5, 0.5), (0.5, 0.5, 0.8, 0.2)]],  # C
-            [[(0.2, 0.2, 0.8, 0.2), (0.2, 0.2, 0.2, 0.8), (0.8, 0.2, 0.8, 0.8), (0.2, 0.8, 0.8, 0.8)]],  # D
-            [[(0.2, 0.2, 0.8, 0.2), (0.8, 0.2, 0.8, 0.8), (0.8, 0.8, 0.2, 0.8), (0.2, 0.8, 0.2, 0.2)]]  # E
+            [[(0.2, 0.2, 0.8, 0.2), (0.8, 0.2, 0.8, 0.8)]],  # D
+            [[(0.2, 0.2, 0.5, 0.5), (0.5, 0.5, 0.8, 0.8)]]   # E
         ]
         
+        # 옵션 그리기
         labels = ['A', 'B', 'C', 'D', 'E']
-        answer_idx = 0
-        
         for idx, lines in enumerate(options):
-            x = self.margin + idx*(self.cell_size + self.margin)
+            x = self.margin + idx * (self.cell_size + self.margin)
             y = self.margin*(self.grid_size+1) + self.cell_size*self.grid_size
-            self._draw_lines_pattern(draw, (x, y), lines)
-            draw.text((x+self.cell_size//2-5, y+self.cell_size+5), labels[idx], fill='black')
+            self._draw_lines(draw, (x, y), lines)
         
-        return img, labels[answer_idx]
+        return img, 'A'
 
-    def _draw_lines_pattern(self, draw, pos, lines):
+    # --------------------------
+    # 문제 23: 로켓 패턴
+    # --------------------------
+    def generate_rocket_pattern(self):
+        img = Image.new('RGB', (self.W, self.H), 'white')
+        draw = ImageDraw.Draw(img)
+        
+        # 로켓 머리/몸통/꼬리 패턴 구현...
+        return img, 'B'
+
+    # --------------------------
+    # 공통 도우미 함수들
+    # --------------------------
+    def _draw_lines(self, draw, pos, lines):
+        """선분 그리기"""
         x, y = pos
-        s = self.cell_size
         for line in lines:
             x1, y1, x2, y2 = line
-            draw.line((x + x1*s, y + y1*s, x + x2*s, y + y2*s), fill='black', width=2)
+            draw.line((
+                x + x1*self.cell_size, 
+                y + y1*self.cell_size,
+                x + x2*self.cell_size, 
+                y + y2*self.cell_size
+            ), fill='black', width=3)
 
-# 추가 문제 생성 함수 및 도형 그리기 함수는 위와 같은 방식으로 구현
+    def _draw_grid(self, draw):
+        """3x3 격자 그리기"""
+        for i in range(1, 3):
+            # 수직선
+            draw.line((
+                self.margin + i*(self.cell_size + self.margin),
+                self.margin,
+                self.margin + i*(self.cell_size + self.margin),
+                self.margin + 3*self.cell_size + 2*self.margin
+            ), fill='gray')
+            # 수평선
+            draw.line((
+                self.margin,
+                self.margin + i*(self.cell_size + self.margin),
+                self.margin + 3*self.cell_size + 2*self.margin,
+                self.margin + i*(self.cell_size + self.margin)
+            ), fill='gray')
 
-print("RavenMatrixGenerator 클래스 구조 및 일부 예시 코드 제공 완료")
+    def save_as_pdf(self, problems, filename="output.pdf"):
+        """PDF 저장"""
+        c = canvas.Canvas(filename, pagesize=A4)
+        width, height = A4
+        problems_per_page = 4
+        
+        for idx, (img, answer) in enumerate(problems):
+            if idx % problems_per_page == 0 and idx != 0:
+                c.showPage()
+            
+            img_path = f"temp_{idx}.png"
+            img.save(img_path)
+            
+            x = 50 + (idx % 2) * 250
+            y = height - 300 - (idx // 2 % 2) * 350
+            
+            c.drawImage(img_path, x, y, width=200, height=200)
+            c.drawString(x+10, y-20, f"정답: {answer}")
+            os.remove(img_path)
+        
+        c.save()
+
+# 사용 예시
+if __name__ == "__main__":
+    generator = RavenMatrixGenerator()
+    
+    # 문제 22번 생성
+    img, answer = generator.generate_problem(type_num=22)
+    img.show()
+    
+    # PDF로 저장 (여러 문제)
+    problems = [generator.generate_problem(type_num=i) for i in range(1, 24)]
+    generator.save_as_pdf(problems)
