@@ -20,18 +20,29 @@ class RavenMatrixGenerator:
             1: "위치 패턴 (Position Pattern)",
             2: "채움 패턴 (Fill Pattern)",
             3: "코너 패턴 (Corner Pattern)",
-            # ... (23번까지 유형 추가)
-            22: "선분 결합 패턴 (Line Combination)",
-            23: "로켓 패턴 (Rocket Pattern)"
+            4: "요소 진행 (Element Progression)",
+            5: "영역 패턴 (Region Pattern)",
+            6: "점 패턴 (Point Pattern)",
+            7: "심볼 배치 (Symbol Arrangement)",
+            8: "상태 변환 (State Transformation)",
+            9: "로켓/우산 패턴 (Rocket/Umbrella Pattern)",
+            10: "선분 결합 패턴 (Line Combination)",
+            11: "회전 삭제 패턴 (Rotation Subtraction)"
         }
         
-        # 유형별 생성 함수 매핑
+        # 유형별 생성 함수 매핑 (기본 틀)
         self.type_generators = {
             1: self.generate_position_pattern,
             2: self.generate_fill_pattern,
-            # ... (23번까지 매핑)
-            22: self.generate_line_combination,
-            23: self.generate_rocket_pattern
+            3: self.generate_corner_pattern,
+            4: self.generate_element_progression,
+            5: self.generate_region_pattern,
+            6: self.generate_point_pattern,
+            7: self.generate_symbol_arrangement,
+            8: self.generate_state_transformation,
+            9: self.generate_rocket_pattern,
+            10: self.generate_line_combination,
+            11: self.generate_rotation_subtraction
         }
 
     def generate_problem(self, type_num=None):
@@ -40,18 +51,9 @@ class RavenMatrixGenerator:
             type_num = random.choice(list(self.type_generators.keys()))
         return self.type_generators[type_num]()
 
-    # --------------------------
-    # 문제 1: 위치 패턴 (예시)
-    # --------------------------
-    def generate_position_pattern(self):
-        img = Image.new('RGB', (self.W, self.H), 'white')
-        draw = ImageDraw.Draw(img)
-        # 패턴 구현...
-        return img, 'A'
-
-    # --------------------------
-    # 문제 22: 선분 결합 패턴
-    # --------------------------
+    # =============================================
+    # 문제 10: 선분 결합 패턴 (완전 구현 예시)
+    # =============================================
     def generate_line_combination(self):
         img = Image.new('RGB', (self.W, self.H), 'white')
         draw = ImageDraw.Draw(img)
@@ -76,7 +78,7 @@ class RavenMatrixGenerator:
         
         # 옵션 생성
         options = [
-            [[(0.2, 0.8, 0.8, 0.2), (0.2, 0.2, 0.8, 0.8)]],  # 정답: A
+            [[(0.2, 0.8, 0.8, 0.2), (0.2, 0.2, 0.8, 0.8)]],  # A: 정답
             [[(0.2, 0.2, 0.8, 0.8)]],  # B
             [[(0.2, 0.2, 0.5, 0.5), (0.5, 0.5, 0.8, 0.2)]],  # C
             [[(0.2, 0.2, 0.8, 0.2), (0.8, 0.2, 0.8, 0.8)]],  # D
@@ -92,19 +94,9 @@ class RavenMatrixGenerator:
         
         return img, 'A'
 
-    # --------------------------
-    # 문제 23: 로켓 패턴
-    # --------------------------
-    def generate_rocket_pattern(self):
-        img = Image.new('RGB', (self.W, self.H), 'white')
-        draw = ImageDraw.Draw(img)
-        
-        # 로켓 머리/몸통/꼬리 패턴 구현...
-        return img, 'B'
-
-    # --------------------------
+    # =============================================
     # 공통 도우미 함수들
-    # --------------------------
+    # =============================================
     def _draw_lines(self, draw, pos, lines):
         """선분 그리기"""
         x, y = pos
@@ -116,24 +108,6 @@ class RavenMatrixGenerator:
                 x + x2*self.cell_size, 
                 y + y2*self.cell_size
             ), fill='black', width=3)
-
-    def _draw_grid(self, draw):
-        """3x3 격자 그리기"""
-        for i in range(1, 3):
-            # 수직선
-            draw.line((
-                self.margin + i*(self.cell_size + self.margin),
-                self.margin,
-                self.margin + i*(self.cell_size + self.margin),
-                self.margin + 3*self.cell_size + 2*self.margin
-            ), fill='gray')
-            # 수평선
-            draw.line((
-                self.margin,
-                self.margin + i*(self.cell_size + self.margin),
-                self.margin + 3*self.cell_size + 2*self.margin,
-                self.margin + i*(self.cell_size + self.margin)
-            ), fill='gray')
 
     def save_as_pdf(self, problems, filename="output.pdf"):
         """PDF 저장"""
@@ -157,14 +131,33 @@ class RavenMatrixGenerator:
         
         c.save()
 
-# 사용 예시
+    # =============================================
+    # 나머지 문제 유형 틀 (구현 필요)
+    # =============================================
+    def generate_position_pattern(self):
+        """문제 1: 위치 패턴 (구현 필요)"""
+        img = Image.new('RGB', (self.W, self.H), 'white')
+        return img, 'A'
+
+    def generate_fill_pattern(self):
+        """문제 2: 채움 패턴 (구현 필요)"""
+        img = Image.new('RGB', (self.W, self.H), 'white')
+        return img, 'B'
+
+    def generate_corner_pattern(self):
+        """문제 3: 코너 패턴 (구현 필요)"""
+        img = Image.new('RGB', (self.W, self.H), 'white')
+        return img, 'C'
+
+    # ... (문제 4~11까지 동일한 틀로 구현)
+
 if __name__ == "__main__":
     generator = RavenMatrixGenerator()
     
-    # 문제 22번 생성
-    img, answer = generator.generate_problem(type_num=22)
+    # 문제 10번 테스트
+    img, answer = generator.generate_problem(type_num=10)
     img.show()
     
-    # PDF로 저장 (여러 문제)
-    problems = [generator.generate_problem(type_num=i) for i in range(1, 24)]
-    generator.save_as_pdf(problems)
+    # PDF 저장 예시 (구현된 문제만 가능)
+    # problems = [generator.generate_problem(type_num=10) for _ in range(5)]
+    # generator.save_as_pdf(problems, "sample.pdf")
